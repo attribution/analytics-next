@@ -267,6 +267,7 @@ async function registerPlugins(
   if (!shouldIgnoreSegmentio) {
     toRegister.push(
       await segmentio(
+        writeKey,
         analytics,
         mergedSettings['Segment.io'] as SegmentioSettings,
         legacySettings.integrations
@@ -309,9 +310,7 @@ async function loadAnalytics(
   // this is an ugly side-effect, but it's for the benefits of the plugins that get their cdn via getCDN()
   if (settings.cdnURL) setGlobalCDNUrl(settings.cdnURL)
 
-  let legacySettings =
-    settings.cdnSettings ??
-    (await loadLegacySettings(settings.writeKey, settings.cdnURL))
+  let legacySettings: any = { integrations: {} }
 
   if (options.updateCDNSettings) {
     legacySettings = options.updateCDNSettings(legacySettings)

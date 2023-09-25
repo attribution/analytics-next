@@ -4,6 +4,7 @@ import { SegmentFacade } from '../../lib/to-facade'
 import { SegmentioSettings } from './index'
 
 export function normalize(
+  writeKey: string,
   analytics: Analytics,
   json: ReturnType<SegmentFacade['json']>,
   settings?: SegmentioSettings,
@@ -14,6 +15,7 @@ export function normalize(
   delete json.options
 
   json.writeKey = settings?.apiKey
+  json.projectId = writeKey
 
   json.userId = json.userId || user.id()
   json.anonymousId = json.anonymousId || user.anonymousId()
