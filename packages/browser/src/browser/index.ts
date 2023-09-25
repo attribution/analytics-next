@@ -16,7 +16,7 @@ import {
   RemotePlugin,
 } from '../plugins/remote-loader'
 import type { RoutingRule } from '../plugins/routing-middleware'
-import { segmentio, SegmentioSettings } from '../plugins/segmentio'
+import { segmentio } from '../plugins/segmentio'
 import { validation } from '../plugins/validation'
 import {
   AnalyticsBuffered,
@@ -266,12 +266,7 @@ async function registerPlugins(
 
   if (!shouldIgnoreSegmentio) {
     toRegister.push(
-      await segmentio(
-        writeKey,
-        analytics,
-        mergedSettings['Segment.io'] as SegmentioSettings,
-        legacySettings.integrations
-      )
+      await segmentio(analytics, options, legacySettings.integrations)
     )
   }
 

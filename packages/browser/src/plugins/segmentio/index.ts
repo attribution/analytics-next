@@ -53,9 +53,8 @@ function onAlias(analytics: Analytics, json: JSON): JSON {
 }
 
 export async function segmentio(
-  writeKey: string,
   analytics: Analytics,
-  settings?: SegmentioSettings,
+  settings?: any,
   integrations?: LegacySettings['integrations']
 ): Promise<Plugin> {
   // Attach `pagehide` before buffer is created so that inflight events are added
@@ -64,6 +63,8 @@ export async function segmentio(
     buffer.push(...Array.from(inflightEvents))
     inflightEvents.clear()
   })
+
+  const writeKey = settings?.apiKey ?? ''
 
   const buffer = analytics.options.disableClientPersistence
     ? new PriorityQueue<Context>(analytics.queue.queue.maxAttempts, [])
@@ -123,7 +124,7 @@ export async function segmentio(
     return client
       .dispatch(
         `${remote}/${path}`,
-        normalize(writeKey, analytics, json, settings, integrations)
+        normalize(analytics, json, settings, integrations)
       )
       .then(() => ctx)
       .catch(() => {
