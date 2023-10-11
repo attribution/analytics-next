@@ -338,8 +338,8 @@ async function loadAnalytics(
     classicIntegrations
   )
 
-  if (options.atb_integrations) {
-    addAtbIntegrations(options.atb_integrations)
+  if (options.atbIntegrations) {
+    addAtbIntegrations(options.atbIntegrations)
   }
 
   const search = window.location.search ?? ''
