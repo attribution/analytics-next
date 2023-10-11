@@ -31,6 +31,7 @@ import { ClassicIntegrationSource } from '../plugins/ajs-destination/types'
 import { attachInspector } from '../core/inspector'
 import { Stats } from '../core/stats'
 import { setGlobalAnalyticsKey } from '../lib/global-analytics-helper'
+import { addAtbIntegrations } from '../plugins/attribution/attribution-integrations'
 
 export interface LegacyIntegrationConfiguration {
   /* @deprecated - This does not indicate browser types anymore */
@@ -336,6 +337,10 @@ async function loadAnalytics(
     plugins,
     classicIntegrations
   )
+
+  if (options.atb_integrations) {
+    addAtbIntegrations(options.atb_integrations)
+  }
 
   const search = window.location.search ?? ''
   const hash = window.location.hash ?? ''
