@@ -54,7 +54,7 @@ function onAlias(analytics: Analytics, json: JSON): JSON {
 
 export async function segmentio(
   analytics: Analytics,
-  settings?: SegmentioSettings,
+  settings?: any,
   integrations?: LegacySettings['integrations']
 ): Promise<Plugin> {
   // Attach `pagehide` before buffer is created so that inflight events are added

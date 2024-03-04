@@ -1,12 +1,11 @@
 import { Analytics } from '../../core/analytics'
 import { LegacySettings } from '../../browser'
 import { SegmentFacade } from '../../lib/to-facade'
-import { SegmentioSettings } from './index'
 
 export function normalize(
   analytics: Analytics,
   json: ReturnType<SegmentFacade['json']>,
-  settings?: SegmentioSettings,
+  settings?: any,
   integrations?: LegacySettings['integrations']
 ): object {
   const user = analytics.user()
@@ -14,6 +13,7 @@ export function normalize(
   delete json.options
 
   json.writeKey = settings?.apiKey
+  json.projectId = settings?.projectId
 
   json.userId = json.userId || user.id()
   json.anonymousId = json.anonymousId || user.anonymousId()
@@ -53,7 +53,7 @@ export function normalize(
   const bundledConfigIds: string[] = []
 
   bundled.sort().forEach((name) => {
-    ;(configIds[name] ?? []).forEach((id) => {
+    ;(configIds[name] ?? []).forEach((id: any) => {
       bundledConfigIds.push(id)
     })
   })
