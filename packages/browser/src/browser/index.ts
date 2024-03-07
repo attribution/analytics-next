@@ -21,7 +21,7 @@ import {
   RemotePlugin,
 } from '../plugins/remote-loader'
 import type { RoutingRule } from '../plugins/routing-middleware'
-import { segmentio } from '../plugins/segmentio'
+import { SegmentioSettings, segmentio } from '../plugins/segmentio'
 import { validation } from '../plugins/validation'
 import {
   AnalyticsBuffered,
