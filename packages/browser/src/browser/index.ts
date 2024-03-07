@@ -2,14 +2,19 @@ import { getProcessEnv } from '../lib/get-process-env'
 import { getCDN, setGlobalCDNUrl } from '../lib/parse-cdn'
 
 import { fetch } from '../lib/fetch'
-import { Analytics, AnalyticsSettings, InitOptions } from '../core/analytics'
+import {
+  Analytics,
+  AnalyticsSettings,
+  NullAnalytics,
+  InitOptions,
+} from '../core/analytics'
 import { Context } from '../core/context'
 import { Plan } from '../core/events'
 import { Plugin } from '../core/plugin'
 import { MetricsOptions } from '../core/stats/remote-metrics'
 import { mergedOptions } from '../lib/merged-options'
-import { createDeferred } from '../lib/create-deferred'
-import { pageEnrichment } from '../plugins/page-enrichment'
+import { createDeferred } from '@segment/analytics-generic-utils'
+import { envEnrichment } from '../plugins/env-enrichment'
 import {
   PluginFactory,
   remoteLoader,
@@ -25,8 +30,8 @@ import {
   flushAddSourceMiddleware,
   flushSetAnonymousID,
   flushOn,
+  PreInitMethodCall,
 } from '../core/buffer'
-import { popSnippetWindowBuffer } from '../core/buffer/snippet'
 import { ClassicIntegrationSource } from '../plugins/ajs-destination/types'
 import { attachInspector } from '../core/inspector'
 import { Stats } from '../core/stats'
@@ -87,11 +92,16 @@ export interface LegacySettings {
    */
   consentSettings?: {
     /**
-     * All unique consent categories.
+     * All unique consent categories for enabled destinations.
      * There can be categories in this array that are important for consent that are not included in any integration  (e.g. 2 cloud mode categories).
      * @example ["Analytics", "Advertising", "CAT001"]
      */
     allCategories: string[]
+
+    /**
+     * Whether or not there are any unmapped destinations for enabled destinations.
+     */
+    hasUnmappedDestinations: boolean
   }
 }
 
@@ -156,7 +166,6 @@ function flushPreBuffer(
   analytics: Analytics,
   buffer: PreInitMethodCallBuffer
 ): void {
-  buffer.push(...popSnippetWindowBuffer())
   flushSetAnonymousID(analytics, buffer)
   flushOn(analytics, buffer)
 }
@@ -170,9 +179,7 @@ async function flushFinalBuffer(
 ): Promise<void> {
   // Call popSnippetWindowBuffer before each flush task since there may be
   // analytics calls during async function calls.
-  buffer.push(...popSnippetWindowBuffer())
   await flushAddSourceMiddleware(analytics, buffer)
-  buffer.push(...popSnippetWindowBuffer())
   flushAnalyticsCallsInNewTask(analytics, buffer)
   // Clear buffer, just in case analytics is loaded twice; we don't want to fire events off again.
   buffer.clear()
@@ -182,7 +189,6 @@ async function registerPlugins(
   writeKey: string,
   legacySettings: LegacySettings,
   analytics: Analytics,
-  opts: InitOptions,
   options: InitOptions,
   pluginLikes: (Plugin | PluginFactory)[] = [],
   legacyIntegrationSources: ClassicIntegrationSource[]
@@ -216,7 +222,7 @@ async function registerPlugins(
             writeKey,
             legacySettings,
             analytics.integrations,
-            opts,
+            options,
             tsubMiddleware,
             legacyIntegrationSources
           )
@@ -231,11 +237,11 @@ async function registerPlugins(
     })
   }
 
-  const schemaFilter = opts.plan?.track
+  const schemaFilter = options.plan?.track
     ? await import(
         /* webpackChunkName: "schemaFilter" */ '../plugins/schema-filter'
       ).then((mod) => {
-        return mod.schemaFilter(opts.plan?.track, legacySettings)
+        return mod.schemaFilter(options.plan?.track, legacySettings)
       })
     : undefined
 
@@ -244,14 +250,14 @@ async function registerPlugins(
     legacySettings,
     analytics.integrations,
     mergedSettings,
-    options.obfuscate,
+    options,
     tsubMiddleware,
     pluginSources
   ).catch(() => [])
 
   const toRegister = [
     validation,
-    pageEnrichment,
+    envEnrichment,
     ...plugins,
     ...legacyDestinations,
     ...remotePlugins,
@@ -262,8 +268,9 @@ async function registerPlugins(
   }
 
   const shouldIgnoreSegmentio =
-    (opts.integrations?.All === false && !opts.integrations['Segment.io']) ||
-    (opts.integrations && opts.integrations['Segment.io'] === false)
+    (options.integrations?.All === false &&
+      !options.integrations['Segment.io']) ||
+    (options.integrations && options.integrations['Segment.io'] === false)
 
   if (!shouldIgnoreSegmentio) {
     toRegister.push(
@@ -301,29 +308,59 @@ async function loadAnalytics(
   options: InitOptions = {},
   preInitBuffer: PreInitMethodCallBuffer
 ): Promise<[Analytics, Context]> {
+  // return no-op analytics instance if disabled
+  if (options.disable === true) {
+    return [new NullAnalytics(), Context.system()]
+  }
+
   if (options.globalAnalyticsKey)
     setGlobalAnalyticsKey(options.globalAnalyticsKey)
   // this is an ugly side-effect, but it's for the benefits of the plugins that get their cdn via getCDN()
   if (settings.cdnURL) setGlobalCDNUrl(settings.cdnURL)
 
   let legacySettings: any = { integrations: {} }
+  if (options.initialPageview) {
+    // capture the page context early, so it's always up-to-date
+    preInitBuffer.push(new PreInitMethodCall('page', []))
+  }
 
   if (options.updateCDNSettings) {
     legacySettings = options.updateCDNSettings(legacySettings)
   }
 
+  // if options.disable is a function, we allow user to disable analytics based on CDN Settings
+  if (typeof options.disable === 'function') {
+    const disabled = await options.disable(legacySettings)
+    if (disabled) {
+      return [new NullAnalytics(), Context.system()]
+    }
+  }
+
   const retryQueue: boolean =
     legacySettings.integrations['Segment.io']?.retryQueue ?? true
 
-  const opts: InitOptions = { retryQueue, ...options }
-  const analytics = new Analytics(settings, opts)
+  options = {
+    retryQueue,
+    ...options,
+  }
+
+  const analytics = new Analytics(settings, options)
 
   attachInspector(analytics)
 
   const plugins = settings.plugins ?? []
 
   const classicIntegrations = settings.classicIntegrations ?? []
-  Stats.initRemoteMetrics(legacySettings.metrics)
+
+  const segmentLoadOptions = options.integrations?.['Segment.io'] as
+    | SegmentioSettings
+    | undefined
+
+  Stats.initRemoteMetrics({
+    ...legacySettings.metrics,
+    host: segmentLoadOptions?.apiHost ?? legacySettings.metrics?.host,
+    protocol: segmentLoadOptions?.protocol,
+  })
 
   // needs to be flushed before plugins are registered
   flushPreBuffer(analytics, preInitBuffer)
@@ -332,7 +369,6 @@ async function loadAnalytics(
     settings.writeKey,
     legacySettings,
     analytics,
-    opts,
     options,
     plugins,
     classicIntegrations
@@ -353,10 +389,6 @@ async function loadAnalytics(
 
   analytics.initialized = true
   analytics.emit('initialize', settings, options)
-
-  if (options.initialPageview) {
-    analytics.page().catch(console.error)
-  }
 
   await flushFinalBuffer(analytics, preInitBuffer)
 

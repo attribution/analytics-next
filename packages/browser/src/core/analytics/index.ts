@@ -13,7 +13,8 @@ import {
 import type { FormArgs, LinkArgs } from '../auto-track'
 import { isOffline } from '../connection'
 import { Context } from '../context'
-import { dispatch, Emitter } from '@segment/analytics-core'
+import { dispatch } from '@segment/analytics-core'
+import { Emitter } from '@segment/analytics-generic-utils'
 import {
   Callback,
   EventFactory,
@@ -54,6 +55,7 @@ import {
 } from '../storage'
 import { PluginFactory } from '../../plugins/remote-loader'
 import { setGlobalAnalytics } from '../../lib/global-analytics-helper'
+import { popPageContext } from '../buffer'
 
 const deprecationWarning =
   'This is being deprecated and will be not be available in future releases of Analytics JS'
@@ -67,7 +69,7 @@ function createDefaultQueue(
   retryQueue = false,
   disablePersistance = false
 ) {
-  const maxAttempts = retryQueue ? 4 : 1
+  const maxAttempts = retryQueue ? 10 : 1
   const priorityQueue = disablePersistance
     ? new PriorityQueue(maxAttempts, [])
     : new PersistedPriorityQueue(maxAttempts, name)
@@ -128,6 +130,24 @@ export interface InitOptions {
    * default: analytics
    */
   globalAnalyticsKey?: string
+
+  /**
+   * Disable sending any data to Segment's servers. All emitted events and API calls (including .ready()), will be no-ops, and no cookies or localstorage will be used.
+   *
+   * @example
+   * ### Basic (Will not not fetch any CDN settings)
+   * ```ts
+   * disable: process.env.NODE_ENV === 'test'
+   * ```
+   *
+   * ### Advanced (Fetches CDN Settings. Do not use this unless you require CDN settings for some reason)
+   * ```ts
+   * disable: (cdnSettings) => cdnSettings.foo === 'bar'
+   * ```
+   */
+  disable?:
+    | boolean
+    | ((cdnSettings: LegacySettings) => boolean | Promise<boolean>)
 }
 
 /* analytics-classic stubs */
@@ -203,7 +223,6 @@ export class Analytics
     this.eventFactory = new EventFactory(this._user)
     this.integrations = options?.integrations ?? {}
     this.options = options ?? {}
-
     autoBind(this)
   }
 
@@ -253,13 +272,15 @@ export class Analytics
   }
 
   async track(...args: EventParams): Promise<DispatchedEvent> {
+    const pageCtx = popPageContext(args)
     const [name, data, opts, cb] = resolveArguments(...args)
 
     const segmentEvent = this.eventFactory.track(
       name,
       data as EventProperties,
       opts,
-      this.integrations
+      this.integrations,
+      pageCtx
     )
 
     return this._dispatch(segmentEvent, cb).then((ctx) => {
@@ -269,6 +290,7 @@ export class Analytics
   }
 
   async page(...args: PageParams): Promise<DispatchedEvent> {
+    const pageCtx = popPageContext(args)
     const [category, page, properties, options, callback] =
       resolvePageArguments(...args)
 
@@ -277,7 +299,8 @@ export class Analytics
       page,
       properties,
       options,
-      this.integrations
+      this.integrations,
+      pageCtx
     )
 
     return this._dispatch(segmentEvent, callback).then((ctx) => {
@@ -287,6 +310,7 @@ export class Analytics
   }
 
   async identify(...args: IdentifyParams): Promise<DispatchedEvent> {
+    const pageCtx = popPageContext(args)
     const [id, _traits, options, callback] = resolveUserArguments(this._user)(
       ...args
     )
@@ -296,7 +320,8 @@ export class Analytics
       this._user.id(),
       this._user.traits(),
       options,
-      this.integrations
+      this.integrations,
+      pageCtx
     )
 
     return this._dispatch(segmentEvent, callback).then((ctx) => {
@@ -313,6 +338,7 @@ export class Analytics
   group(): Group
   group(...args: GroupParams): Promise<DispatchedEvent>
   group(...args: GroupParams): Promise<DispatchedEvent> | Group {
+    const pageCtx = popPageContext(args)
     if (args.length === 0) {
       return this._group
     }
@@ -329,7 +355,8 @@ export class Analytics
       groupId,
       groupTraits,
       options,
-      this.integrations
+      this.integrations,
+      pageCtx
     )
 
     return this._dispatch(segmentEvent, callback).then((ctx) => {
@@ -339,12 +366,14 @@ export class Analytics
   }
 
   async alias(...args: AliasParams): Promise<DispatchedEvent> {
+    const pageCtx = popPageContext(args)
     const [to, from, options, callback] = resolveAliasArguments(...args)
     const segmentEvent = this.eventFactory.alias(
       to,
       from,
       options,
-      this.integrations
+      this.integrations,
+      pageCtx
     )
     return this._dispatch(segmentEvent, callback).then((ctx) => {
       this.emit('alias', to, from, ctx.event.options)
@@ -353,6 +382,7 @@ export class Analytics
   }
 
   async screen(...args: PageParams): Promise<DispatchedEvent> {
+    const pageCtx = popPageContext(args)
     const [category, page, properties, options, callback] =
       resolvePageArguments(...args)
 
@@ -361,7 +391,8 @@ export class Analytics
       page,
       properties,
       options,
-      this.integrations
+      this.integrations,
+      pageCtx
     )
     return this._dispatch(segmentEvent, callback).then((ctx) => {
       this.emit(
@@ -638,5 +669,15 @@ export class Analytics
       if (!an[method]) return
     }
     an[method].apply(this, args)
+  }
+}
+
+/**
+ * @returns a no-op analytics instance that does not create cookies or localstorage, or send any events to segment.
+ */
+export class NullAnalytics extends Analytics {
+  constructor() {
+    super({ writeKey: '' }, { disableClientPersistence: true })
+    this.initialized = true
   }
 }

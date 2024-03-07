@@ -58,7 +58,7 @@ describe('Method Smoke Tests', () => {
       expect(calls[0].batch[0]._metadata).toMatchInlineSnapshot(
         { nodeVersion: expect.any(String), jsRuntime: 'node' },
         `
-        Object {
+        {
           "jsRuntime": "node",
           "nodeVersion": Any<String>,
         }
@@ -80,18 +80,15 @@ describe('Method Smoke Tests', () => {
 
       expect(pick(headers, 'authorization', 'user-agent', 'content-type'))
         .toMatchInlineSnapshot(`
-              Object {
-                "authorization": Array [
-                  "Basic Zm9vOg==",
-                ],
-                "content-type": Array [
-                  "application/json",
-                ],
-                "user-agent": Array [
-                  "analytics-node-next/latest",
-                ],
-              }
-          `)
+        {
+          "content-type": [
+            "application/json",
+          ],
+          "user-agent": [
+            "analytics-node-next/latest",
+          ],
+        }
+      `)
       expect(scope.isDone()).toBeTruthy()
     })
   })
@@ -136,20 +133,20 @@ describe('Method Smoke Tests', () => {
       expect(calls[0]).toMatchInlineSnapshot(
         snapshotMatchers.defaultReqBody,
         `
-        Object {
-          "batch": Array [
-            Object {
+        {
+          "batch": [
+            {
               "_metadata": Any<Object>,
-              "context": Object {
-                "library": Object {
+              "context": {
+                "library": {
                   "name": "@segment/analytics-node",
                   "version": Any<String>,
                 },
               },
-              "integrations": Object {},
+              "integrations": {},
               "messageId": Any<String>,
               "timestamp": StringMatching /\\^\\\\d\\{4\\}-\\\\d\\{2\\}-\\\\d\\{2\\}T\\\\d\\{2\\}:\\\\d\\{2\\}:\\\\d\\{2\\}\\\\\\.\\\\d\\{3\\}Z\\$/,
-              "traits": Object {
+              "traits": {
                 "foo": "bar",
               },
               "type": "identify",
@@ -157,6 +154,7 @@ describe('Method Smoke Tests', () => {
             },
           ],
           "sentAt": StringMatching /\\^\\\\d\\{4\\}-\\\\d\\{2\\}-\\\\d\\{2\\}T\\\\d\\{2\\}:\\\\d\\{2\\}:\\\\d\\{2\\}\\\\\\.\\\\d\\{3\\}Z\\$/,
+          "writeKey": "foo",
         }
       `
       )
@@ -172,20 +170,20 @@ describe('Method Smoke Tests', () => {
       expect(calls[0]).toMatchInlineSnapshot(
         snapshotMatchers.defaultReqBody,
         `
-        Object {
-          "batch": Array [
-            Object {
+        {
+          "batch": [
+            {
               "_metadata": Any<Object>,
-              "context": Object {
-                "library": Object {
+              "context": {
+                "library": {
                   "name": "@segment/analytics-node",
                   "version": Any<String>,
                 },
               },
               "event": "foo",
-              "integrations": Object {},
+              "integrations": {},
               "messageId": Any<String>,
-              "properties": Object {
+              "properties": {
                 "hello": "world",
               },
               "timestamp": StringMatching /\\^\\\\d\\{4\\}-\\\\d\\{2\\}-\\\\d\\{2\\}T\\\\d\\{2\\}:\\\\d\\{2\\}:\\\\d\\{2\\}\\\\\\.\\\\d\\{3\\}Z\\$/,
@@ -194,6 +192,7 @@ describe('Method Smoke Tests', () => {
             },
           ],
           "sentAt": StringMatching /\\^\\\\d\\{4\\}-\\\\d\\{2\\}-\\\\d\\{2\\}T\\\\d\\{2\\}:\\\\d\\{2\\}:\\\\d\\{2\\}\\\\\\.\\\\d\\{3\\}Z\\$/,
+          "writeKey": "foo",
         }
       `
       )
@@ -205,26 +204,27 @@ describe('Method Smoke Tests', () => {
       expect(calls[0]).toMatchInlineSnapshot(
         snapshotMatchers.defaultReqBody,
         `
-        Object {
-          "batch": Array [
-            Object {
+        {
+          "batch": [
+            {
               "_metadata": Any<Object>,
               "anonymousId": "foo",
-              "context": Object {
-                "library": Object {
+              "context": {
+                "library": {
                   "name": "@segment/analytics-node",
                   "version": Any<String>,
                 },
               },
-              "integrations": Object {},
+              "integrations": {},
               "messageId": Any<String>,
               "name": "page",
-              "properties": Object {},
+              "properties": {},
               "timestamp": StringMatching /\\^\\\\d\\{4\\}-\\\\d\\{2\\}-\\\\d\\{2\\}T\\\\d\\{2\\}:\\\\d\\{2\\}:\\\\d\\{2\\}\\\\\\.\\\\d\\{3\\}Z\\$/,
               "type": "page",
             },
           ],
           "sentAt": StringMatching /\\^\\\\d\\{4\\}-\\\\d\\{2\\}-\\\\d\\{2\\}T\\\\d\\{2\\}:\\\\d\\{2\\}:\\\\d\\{2\\}\\\\\\.\\\\d\\{3\\}Z\\$/,
+          "writeKey": "foo",
         }
       `
       )
@@ -240,28 +240,29 @@ describe('Method Smoke Tests', () => {
       expect(calls[0]).toMatchInlineSnapshot(
         snapshotMatchers.defaultReqBody,
         `
-        Object {
-          "batch": Array [
-            Object {
+        {
+          "batch": [
+            {
               "_metadata": Any<Object>,
               "anonymousId": "foo",
-              "context": Object {
-                "library": Object {
+              "context": {
+                "library": {
                   "name": "@segment/analytics-node",
                   "version": Any<String>,
                 },
               },
               "groupId": "myGroupId",
-              "integrations": Object {},
+              "integrations": {},
               "messageId": Any<String>,
               "timestamp": StringMatching /\\^\\\\d\\{4\\}-\\\\d\\{2\\}-\\\\d\\{2\\}T\\\\d\\{2\\}:\\\\d\\{2\\}:\\\\d\\{2\\}\\\\\\.\\\\d\\{3\\}Z\\$/,
-              "traits": Object {
+              "traits": {
                 "some_traits": 123,
               },
               "type": "group",
             },
           ],
           "sentAt": StringMatching /\\^\\\\d\\{4\\}-\\\\d\\{2\\}-\\\\d\\{2\\}T\\\\d\\{2\\}:\\\\d\\{2\\}:\\\\d\\{2\\}\\\\\\.\\\\d\\{3\\}Z\\$/,
+          "writeKey": "foo",
         }
       `
       )
@@ -273,17 +274,17 @@ describe('Method Smoke Tests', () => {
       expect(calls[0]).toMatchInlineSnapshot(
         snapshotMatchers.defaultReqBody,
         `
-        Object {
-          "batch": Array [
-            Object {
+        {
+          "batch": [
+            {
               "_metadata": Any<Object>,
-              "context": Object {
-                "library": Object {
+              "context": {
+                "library": {
                   "name": "@segment/analytics-node",
                   "version": Any<String>,
                 },
               },
-              "integrations": Object {},
+              "integrations": {},
               "messageId": Any<String>,
               "previousId": "previous",
               "timestamp": StringMatching /\\^\\\\d\\{4\\}-\\\\d\\{2\\}-\\\\d\\{2\\}T\\\\d\\{2\\}:\\\\d\\{2\\}:\\\\d\\{2\\}\\\\\\.\\\\d\\{3\\}Z\\$/,
@@ -292,6 +293,7 @@ describe('Method Smoke Tests', () => {
             },
           ],
           "sentAt": StringMatching /\\^\\\\d\\{4\\}-\\\\d\\{2\\}-\\\\d\\{2\\}T\\\\d\\{2\\}:\\\\d\\{2\\}:\\\\d\\{2\\}\\\\\\.\\\\d\\{3\\}Z\\$/,
+          "writeKey": "foo",
         }
       `
       )
@@ -307,21 +309,21 @@ describe('Method Smoke Tests', () => {
       expect(calls[0]).toMatchInlineSnapshot(
         snapshotMatchers.defaultReqBody,
         `
-        Object {
-          "batch": Array [
-            Object {
+        {
+          "batch": [
+            {
               "_metadata": Any<Object>,
               "anonymousId": "foo",
-              "context": Object {
-                "library": Object {
+              "context": {
+                "library": {
                   "name": "@segment/analytics-node",
                   "version": Any<String>,
                 },
               },
-              "integrations": Object {},
+              "integrations": {},
               "messageId": Any<String>,
               "name": "screen",
-              "properties": Object {
+              "properties": {
                 "title": "wip",
               },
               "timestamp": StringMatching /\\^\\\\d\\{4\\}-\\\\d\\{2\\}-\\\\d\\{2\\}T\\\\d\\{2\\}:\\\\d\\{2\\}:\\\\d\\{2\\}\\\\\\.\\\\d\\{3\\}Z\\$/,
@@ -329,6 +331,7 @@ describe('Method Smoke Tests', () => {
             },
           ],
           "sentAt": StringMatching /\\^\\\\d\\{4\\}-\\\\d\\{2\\}-\\\\d\\{2\\}T\\\\d\\{2\\}:\\\\d\\{2\\}:\\\\d\\{2\\}\\\\\\.\\\\d\\{3\\}Z\\$/,
+          "writeKey": "foo",
         }
       `
       )
@@ -346,7 +349,7 @@ describe('Client: requestTimeout', () => {
     jest.useRealTimers()
     const ajs = createTestAnalytics(
       {
-        maxEventsInBatch: 1,
+        flushAt: 1,
         httpRequestTimeout: 0,
       },
       { useRealHTTPClient: true }

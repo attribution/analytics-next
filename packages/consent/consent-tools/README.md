@@ -7,12 +7,15 @@
 import { createWrapper, resolveWhen } from '@segment/analytics-consent-tools'
 
 export const withCMP = createWrapper({
+  // Wait to load wrapper or call "shouldLoadSegment" until window.CMP exists.
+  shouldLoadWrapper: async () => {
+    await resolveWhen(() => window.CMP !== undefined, 500)
+  },
 
   // Wrapper waits to load segment / get categories until this function returns / resolves
-  shouldLoad: (ctx) => {
-    const CMP = await getCMP()
+  shouldLoadSegment: async (ctx) => {
     await resolveWhen(
-      () => !CMP.popUpVisible(),
+      () => !window.CMP.popUpVisible(),
       500
     )
 
@@ -25,23 +28,15 @@ export const withCMP = createWrapper({
   },
 
   getCategories: () => {
-    const CMP = await getCMP()
-    return normalizeCategories(CMP.consentedCategories()) // Expected format: { foo: true, bar: false }
+    return normalizeCategories(window.CMP.consentedCategories()) // Expected format: { foo: true, bar: false }
   },
 
   registerOnConsentChanged: (setCategories) => {
-    const CMP = await getCMP()
-    CMP.onConsentChanged((event) => {
+    window.CMP.onConsentChanged((event) => {
       setCategories(normalizeCategories(event.detail))
     })
   },
 })
-
-
-const getCMP = async () => {
- await resolveWhen(() => window.CMP !== undefined, 500)
- return window.CMP
-}
 ```
 
 ## Wrapper Usage API
