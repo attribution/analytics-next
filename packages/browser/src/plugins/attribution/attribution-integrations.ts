@@ -1,8 +1,6 @@
 import { loadScript } from '../../lib/load-script'
 
 async function loadIntegration(name: string, params: any) {
-  if (params) console.log(params, name)
-
   const path = 'https://scripts.attributionapp.com/v3'
   const fullPath = `${path}/${name}.js`
 

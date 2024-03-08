@@ -74,7 +74,7 @@ async function attempt<T>(promise: () => Promise<T>) {
 
 const globalAnalyticsKey = (
   document.querySelector(
-    'script[data-global-attribution-key]'
+    'script[data-global-segment-analytics-key]'
   ) as HTMLScriptElement
 )?.dataset.globalSegmentAnalyticsKey
 
