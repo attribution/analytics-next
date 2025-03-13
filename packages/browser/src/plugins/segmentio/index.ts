@@ -52,7 +52,7 @@ function onAlias(analytics: Analytics, json: JSON): JSON {
 
 export function segmentio(
   analytics: Analytics,
-  settings?: SegmentioSettings,
+  settings?: any,
   integrations?: LegacySettings['integrations']
 ): Plugin {
   // Attach `pagehide` before buffer is created so that inflight events are added

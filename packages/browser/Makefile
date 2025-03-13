@@ -25,6 +25,18 @@ clean: ## Clean the build directory
 	rm -rf dist generated
 .PHONY: clean
 
+attribution: ## Replaces cookie names in the standalone build and remove last line
+	@gsed -i 's/\"ajs_group_id\"/\"_attrg\"/g' ./dist/umd/standalone.js
+	@gsed -i 's/\"ajs_group_properties\"/\"attr_group_properties\"/g' ./dist/umd/standalone.js
+	@gsed -i 's/\"ajs_user_id\"/\"_attru\"/g' ./dist/umd/standalone.js
+	@gsed -i 's/\"ajs_user\"/\"none\"/g' ./dist/umd/standalone.js
+	@gsed -i 's/\"ajs_user_traits\"/\"attr_user_traits\"/g' ./dist/umd/standalone.js
+	@gsed -i 's/\"ajs_anonymous_id\"/\"_attrb\"/g' ./dist/umd/standalone.js
+	@gsed -i 's/\"_sio\"/\"_attrb\"/g' ./dist/umd/standalone.js
+	@gsed -i 's/\"analytics.js\"/\"attribution.js\"/g' ./dist/umd/standalone.js
+	@gsed -i 's/\/\/# sourceMappingURL=standalone.js.map//g' ./dist/umd/standalone.js
+.PHONY: attribution
+
 ## Test Commands
 
 tdd: node_modules ## Runs unit tests in watch mode

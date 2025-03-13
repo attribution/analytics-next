@@ -47,14 +47,8 @@ function getWriteKey(): string | undefined {
 }
 
 export async function install(): Promise<void> {
-  const writeKey = getWriteKey()
-  const options = getGlobalAnalytics()?._loadOptions ?? {}
-  if (!writeKey) {
-    console.error(
-      'Failed to load Write Key. Make sure to use the latest version of the Segment snippet, which can be found in your source settings.'
-    )
-    return
-  }
+  const options: any = getGlobalAnalytics()?._loadOptions ?? {}
+  const writeKey = getWriteKey() || options.projectId
 
   setGlobalAnalytics(
     (await AnalyticsBrowser.standalone(writeKey, options)) as AnalyticsSnippet

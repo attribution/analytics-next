@@ -21,7 +21,7 @@ import {
   RemotePlugin,
 } from '../plugins/remote-loader'
 import type { RoutingRule } from '../plugins/routing-middleware'
-import { segmentio, SegmentioSettings } from '../plugins/segmentio'
+import { segmentio } from '../plugins/segmentio'
 import { validation } from '../plugins/validation'
 import {
   AnalyticsBuffered,
@@ -36,6 +36,7 @@ import { ClassicIntegrationSource } from '../plugins/ajs-destination/types'
 import { attachInspector } from '../core/inspector'
 import { Stats } from '../core/stats'
 import { setGlobalAnalyticsKey } from '../lib/global-analytics-helper'
+import { addAtbIntegrations } from '../plugins/attribution/attribution-integrations'
 
 export interface LegacyIntegrationConfiguration {
   /* @deprecated - This does not indicate browser types anymore */
@@ -273,11 +274,7 @@ async function registerPlugins(
 
   if (!shouldIgnoreSegmentio) {
     toRegister.push(
-      await segmentio(
-        analytics,
-        mergedSettings['Segment.io'] as SegmentioSettings,
-        legacySettings.integrations
-      )
+      await segmentio(analytics, options, legacySettings.integrations)
     )
   }
 
@@ -326,9 +323,7 @@ async function loadAnalytics(
     preInitBuffer.push(new PreInitMethodCall('page', []))
   }
 
-  let legacySettings =
-    settings.cdnSettings ??
-    (await loadLegacySettings(settings.writeKey, settings.cdnURL))
+  let legacySettings: any = { integrations: {} }
 
   if (options.updateCDNSettings) {
     legacySettings = options.updateCDNSettings(legacySettings)
@@ -379,6 +374,10 @@ async function loadAnalytics(
     plugins,
     classicIntegrations
   )
+
+  if (options.atbIntegrations) {
+    addAtbIntegrations(options.atbIntegrations)
+  }
 
   const search = window.location.search ?? ''
   const hash = window.location.hash ?? ''
