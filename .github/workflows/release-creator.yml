@@ -28,7 +28,7 @@ jobs:
           cache: "yarn"
 
       - name: Install Dependencies
-        run: PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 HUSKY=0 yarn install --immutable
+        run: PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 yarn install --immutable
 
       - name: Create or Update Release PR
         id: changesets
