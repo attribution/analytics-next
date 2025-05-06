@@ -77,6 +77,9 @@ export class User {
   options: UserOptions = {}
 
   constructor(options: UserOptions = defaults, cookieOptions?: CookieOptions) {
+    console.log('options', options)
+    console.log('defaults', defaults)
+    console.log('cookieOptions', cookieOptions)
     this.options = { ...defaults, ...options }
     this.cookieOptions = cookieOptions
 
