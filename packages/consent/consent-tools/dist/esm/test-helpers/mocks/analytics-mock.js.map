@@ -1,0 +1,1 @@
+{"version":3,"file":"analytics-mock.js","sourceRoot":"","sources":["../../../../src/test-helpers/mocks/analytics-mock.ts"],"names":[],"mappings":"AAEA,MAAM,CAAC,MAAM,aAAa,GAA8B;IACtD,mBAAmB,EAAE,IAAI,CAAC,EAAE,EAAE;IAC9B,IAAI,EAAE,IAAI,CAAC,EAAE,EAAE;IACf,IAAI,EAAE,IAAI,CAAC,EAAE,EAAE;IACf,EAAE,EAAE,IAAI,CAAC,EAAE,EAAE;IACb,KAAK,EAAE,IAAI,CAAC,EAAE,EAAE;CACjB,CAAA"}

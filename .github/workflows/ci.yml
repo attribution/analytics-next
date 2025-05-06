@@ -68,4 +68,3 @@ jobs:
           key: ${{ runner.os }}-turbo-${{ github.sha }}
           restore-keys: |
             ${{ runner.os }}-turbo-
-      - run: yarn turbo run --filter='consent-tools-integration-tests' test:int
