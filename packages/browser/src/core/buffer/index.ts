@@ -278,9 +278,10 @@ export class AnalyticsBuffered
         this.instance = ajs
         this.ctx = ctx
       })
-      .catch(() => {
+      .catch((e) => {
         // intentionally do nothing...
         // this result of this promise will be caught by the 'catch' block on this class.
+        console.log('error', e)
       })
   }
 
